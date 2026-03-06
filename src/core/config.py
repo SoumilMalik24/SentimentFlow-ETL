@@ -11,9 +11,14 @@ class Settings(BaseSettings):
     NEWS_API_KEYS: List[str] = Field(..., description="List of News API keys")
     HF_TOKEN: str | None = Field(None, description="Hugging Face API token (optional)")
     LOG_DIR: str = Field(default="logs", description="Directory for logs")
-    
+
     # Model ID from HuggingFace
     MODEL_PATH: str = Field(..., description="Hugging Face Model ID")
+
+    # Cloudinary (for startup image uploads via admin dashboard)
+    CLOUDINARY_CLOUD_NAME: str | None = Field(None, description="Cloudinary cloud name")
+    CLOUDINARY_API_KEY: str | None = Field(None, description="Cloudinary API key")
+    CLOUDINARY_API_SECRET: str | None = Field(None, description="Cloudinary API secret")
     
     @field_validator("NEWS_API_KEYS", mode='before')
     @classmethod

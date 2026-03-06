@@ -3,6 +3,9 @@ psycopg2-binary
 transformers
 torch
 streamlit
+streamlit-cropper
+Pillow
 pydantic-settings
 plotly
 pandas
+cloudinary

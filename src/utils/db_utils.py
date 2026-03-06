@@ -210,6 +210,44 @@ def fetch_all_sectors(conn):
         logging.error(f"Failed to fetch all sectors: {e}")
         raise
 
+def fetch_all_startups(conn):
+    """
+    Fetches all startups with their current imageUrl.
+    Used for the image upload page dropdown.
+    Returns list of dicts: {id, name, imageUrl}.
+    """
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT s.id, s.name, s."imageUrl", sec.name AS "sectorName"
+                FROM "Startups" s
+                LEFT JOIN "Sector" sec ON s."sectorId" = sec.id
+                ORDER BY sec.name ASC, s.name ASC
+            """)
+            return cur.fetchall()
+    except Exception as e:
+        logging.error(f"Failed to fetch all startups: {e}")
+        raise
+
+def update_startup_image_url(conn, startup_id: str, image_url: str):
+    """
+    Updates only the imageUrl for a specific startup.
+    Does NOT commit — caller must commit.
+    """
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE "Startups"
+                SET "imageUrl" = %s
+                WHERE id = %s
+            """, (image_url, startup_id))
+            if cur.rowcount == 0:
+                raise ValueError(f"No startup found with id: {startup_id}")
+            logging.info(f"Updated imageUrl for startup id={startup_id}")
+    except Exception as e:
+        logging.error(f"Failed to update imageUrl for {startup_id}: {e}")
+        raise
+
 def get_sector_id_by_name(conn, sector_name: str):
     """Fetches the ID of a sector given its name."""
     try:
