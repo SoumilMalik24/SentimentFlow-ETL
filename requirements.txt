@@ -1,0 +1,8 @@
+requests
+psycopg2-binary
+transformers
+torch
+streamlit
+pydantic-settings
+plotly
+pandas
