@@ -1,0 +1,73 @@
+# ============================================================
+# SentimentFlow — Docker Compose
+# Spins up the app container + PostgreSQL together.
+# Usage: docker compose up
+# ============================================================
+
+version: "3.9"
+
+services:
+  # ── PostgreSQL Database ────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: sentimentflow_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sfuser
+      POSTGRES_PASSWORD: sfpassword
+      POSTGRES_DB: sentimentflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sfuser -d sentimentflow" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── ETL Pipeline ───────────────────────────────────────────
+  pipeline:
+    build: .
+    container_name: sentimentflow_pipeline
+    command: python main.py
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+  # ── Admin Dashboard (Streamlit) ────────────────────────────
+  admin:
+    build: .
+    container_name: sentimentflow_admin
+    command: streamlit run streamlit_admin.py --server.port=8501 --server.address=0.0.0.0
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./logs:/app/logs
+
+  # ── Sentiment Dashboard (Streamlit) ───────────────────────
+  dashboard:
+    build: .
+    container_name: sentimentflow_dashboard
+    command: streamlit run streamlit_dashboard.py --server.port=8502 --server.address=0.0.0.0
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8502:8502"
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
